@@ -20,7 +20,7 @@ python run.py
 ALGORITHM-26_Team_Alpha/
 ├── app/
 │   ├── models/
-│   │   └── __init__.py            # SQLAlchemy database models
+│   │   └── __init__.py            # SQLAlchemy ORM models (MySQL)
 │   ├── routes/
 │   │   ├── __init__.py            # Route/blueprint registration
 │   │   ├── academic.py            # Courses, attendance, marks, materials, timetable
