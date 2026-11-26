@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard · CampusHub{% endblock %}
+{% block content %}
+<div class="hero-banner mb-4 anim-fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:2;">
+    <div class="d-flex align-items-center gap-3">
+      <img src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="avatar-md">
+      <div>
+        <div class="badge bg-white bg-opacity-25 text-white mb-1">System Administrator</div>
+        <h3 class="fw-bold mb-1">Administration Overview</h3>
+        <div class="small text-white-50">{{ current_user.name }} · Central ERP Control Panel</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin_p.manage_fees') }}" class="btn btn-light btn-sm text-primary fw-semibold">
+        <i class="bi bi-cash-stack me-1"></i> Issue Fee Demand
+      </a>
+      <a href="{{ url_for('acad.new_notice') }}" class="btn btn-outline-light btn-sm fw-semibold">
+        <i class="bi bi-megaphone me-1"></i> Post Notice
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% set icons = ['bi-people-fill', 'bi-person-workspace', 'bi-journal-bookmark-fill', 'bi-currency-rupee'] %}
+  {% for k, v in stats.items() %}
+  <div class="col-6 col-md-3 anim-fade-up delay-{{ loop.index }}">
+    <div class="kpi-card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-semibold">{{ k }}</span>
+        <span class="kpi-icon-box bg-primary-subtle text-primary">
+          <i class="bi {{ icons[loop.index0 % 4] }}"></i>
+        </span>
+      </div>
+      <div class="fs-2 fw-bold text-dark count-up">{{ v }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card anim-fade-up delay-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h6 class="fw-bold mb-0"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Recent Online Fee Collections ({{ pending_dues }} pending demands)</h6>
+    <a href="{{ url_for('admin_p.manage_fees') }}" class="btn btn-sm btn-light text-primary">Manage All →</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Receipt</th><th>Student</th><th>Fee Type</th><th>Amount</th><th>Date</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for p in recent_payments %}
+        <tr>
+          <td><code>{{ p.receipt_no }}</code></td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ p.student.user.avatar_url }}" class="avatar-sm" alt="Student">
+              <div>
+                <div class="fw-semibold">{{ p.student.user.name }}</div>
+                <small class="text-muted">{{ p.student.roll_no }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ p.title }}</td>
+          <td class="fw-bold text-success">₹{{ '{:,.2f}'.format(p.amount) }}</td>
+          <td>{{ p.paid_at.strftime('%d %b %Y') }}</td>
+          <td><a href="{{ url_for('stud.payment_receipt', pid=p.id) }}" class="btn btn-sm btn-outline-primary">Receipt</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted text-center py-4">No payments recorded yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

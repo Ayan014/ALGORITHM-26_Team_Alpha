@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Exam Enrollment · CampusHub{% endblock %}
+{% block content %}
+<div class="row justify-content-center anim-fade-up">
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+          <img src="{{ s.user.avatar_url }}" class="avatar-sm" alt="{{ s.user.name }}">
+          <div>
+            <h5 class="fw-bold mb-0">{{ enr.exam_session }}</h5>
+            <small class="text-muted">{{ s.user.name }} · Roll: {{ s.roll_no }} · Reg: {{ s.reg_no }}</small>
+          </div>
+        </div>
+        <span class="badge fs-6 rounded-pill px-3 {{ 'bg-success' if enr.status == 'Enrolled' else 'bg-warning text-dark' }}">
+          {{ enr.status }}
+        </span>
+      </div>
+      <div class="card-body p-4">
+        <h6 class="fw-bold mb-2">Papers Registered for Semester {{ s.semester }}</h6>
+        <table class="table table-bordered table-sm mb-4">
+          <thead>
+            <tr><th>Course Code</th><th>Course Title</th><th>Credits</th><th>Paper Type</th></tr>
+          </thead>
+          <tbody>
+            {% for c in courses %}
+            <tr>
+              <td class="fw-semibold">{{ c.code }}</td>
+              <td>{{ c.title }}</td>
+              <td>{{ c.credits }}</td>
+              <td>Theory + Internal</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="p-4 rounded-4 bg-light border d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div>
+            <div class="small text-muted">University Examination Enrollment Fee</div>
+            <div class="fs-3 fw-bold text-primary">₹{{ '{:,.2f}'.format(enr.fee_amount) }}</div>
+            {% if enr.status == 'Enrolled' %}
+            <small class="text-success fw-semibold"><i class="bi bi-check-circle-fill"></i> Enrolled · Admit Card No: {{ enr.admit_no }}</small>
+            {% else %}
+            <small class="text-muted">Pay online to confirm exam form submission & generate Admit Card.</small>
+            {% endif %}
+          </div>
+
+          <div>
+            {% if enr.status == 'Enrolled' %}
+            <a href="{{ url_for('stud.admit_card') }}" class="btn btn-success btn-lg">
+              <i class="bi bi-card-checklist me-1"></i> View / Download Admit Card
+            </a>
+            {% else %}
+            <a href="{{ url_for('stud.fee_checkout', did=demand.id) }}" class="btn btn-primary btn-lg">
+              <i class="bi bi-credit-card me-1"></i> Pay Exam Fee (₹{{ '{:,.0f}'.format(enr.fee_amount) }})
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

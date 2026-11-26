@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Payment Receipt · {{ pay.receipt_no }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print anim-fade-up" style="max-width:850px;margin:0 auto;">
+  <a href="{{ url_for('stud.fees_portal') }}" class="btn btn-sm btn-outline-secondary">← Back to Fees</a>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="bi bi-download me-1"></i> Download / Print Receipt</button>
+    <button class="btn btn-sm btn-outline-success" onclick="shareDocument('Fee Receipt {{ pay.receipt_no }}', 'Paid ₹{{ pay.amount }} for {{ pay.title }}')"><i class="bi bi-share me-1"></i> Share Receipt</button>
+  </div>
+</div>
+
+<div class="doc-sheet shadow-sm anim-fade-up delay-1">
+  <div class="doc-header d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="fw-bold text-uppercase mb-0">CampusHub Institute of Technology</h4>
+      <small class="text-muted">Accounts & Student Fee Collection Cell</small>
+    </div>
+    <div class="text-end">
+      <span class="badge bg-success fs-6">PAID RECEIPT</span>
+      <div class="small fw-bold mt-1">{{ pay.receipt_no }}</div>
+    </div>
+  </div>
+
+  <div class="row align-items-center mb-4 small">
+    <div class="col-6 d-flex align-items-center gap-3">
+      <img src="{{ s.user.avatar_url }}" alt="{{ s.user.name }}" class="avatar-md">
+      <div>
+        <div><strong>Received From:</strong> {{ s.user.name }}</div>
+        <div><strong>Roll / Reg No:</strong> {{ s.roll_no }} / {{ s.reg_no }}</div>
+        <div><strong>Department:</strong> {{ s.department.name }} (Sem {{ s.semester }})</div>
+      </div>
+    </div>
+    <div class="col-6 text-end">
+      <div><strong>Payment Date:</strong> {{ pay.paid_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+      <div><strong>Payment Mode:</strong> {{ pay.gateway }}</div>
+      <div><strong>Transaction ID:</strong> <code>{{ pay.razorpay_payment_id }}</code></div>
+    </div>
+  </div>
+
+  <table class="table table-bordered">
+    <thead class="table-light">
+      <tr><th>#</th><th>Fee Category</th><th>Particulars</th><th class="text-end">Amount (INR)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>{{ pay.fee_type }}</td>
+        <td>{{ pay.title }}</td>
+        <td class="text-end fw-bold">₹{{ '{:,.2f}'.format(pay.amount) }}</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="table-light">
+        <th colspan="3" class="text-end">Total Amount Paid</th>
+        <th class="text-end fs-5 text-success">₹{{ '{:,.2f}'.format(pay.amount) }}</th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="d-flex justify-content-between mt-5 pt-3 small text-muted">
+    <div>Order Ref: <code>{{ pay.razorpay_order_id }}</code></div>
+    <div class="text-end"><strong>Authorized Signatory</strong><br>Computer-generated valid receipt</div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{% if auto_print %}<script>window.onload=()=>window.print()</script>{% endif %}{% endblock %}

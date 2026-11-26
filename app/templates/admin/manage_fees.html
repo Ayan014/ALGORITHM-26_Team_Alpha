@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Manage Fee Demands · CampusHub{% endblock %}
+{% block content %}
+<div class="mb-3 anim-fade-up">
+  <h4 class="fw-bold mb-0">Bulk Fee Demand Generator</h4>
+  <small class="text-muted">Assign semester, examination, or hostel/lab fee demands across batches</small>
+</div>
+
+<form method="post" class="card mb-4 anim-fade-up delay-1">
+  <div class="card-body row g-3">
+    <div class="col-md-2">
+      <label class="form-label small fw-semibold">Semester</label>
+      <select name="semester" class="form-select">
+        {% for i in range(1, 9) %}<option value="{{ i }}">Sem {{ i }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small fw-semibold">Fee Category</label>
+      <select name="fee_type" class="form-select">
+        <option>Semester Fee</option>
+        <option>Exam Fee</option>
+        <option>Hostel / Lab Fee</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small fw-semibold">Title</label>
+      <input class="form-control" name="title" placeholder="e.g. Semester 1 Tuition Fee" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small fw-semibold">Amount (₹)</label>
+      <input type="number" step="0.01" class="form-control" name="amount" value="25000" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small fw-semibold">Due Date</label>
+      <input type="date" class="form-control" name="due_date" required>
+    </div>
+    <div class="col-12 text-end">
+      <button class="btn btn-primary px-4">Assign Fee to All Semester Students</button>
+    </div>
+  </div>
+</form>
+
+<div class="card anim-fade-up delay-2">
+  <div class="card-header fw-bold">Latest Fee Demands</div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0">
+      <thead><tr><th>Student</th><th>Type</th><th>Title</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for d in demands %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ d.student.user.avatar_url }}" class="avatar-xs" alt="">
+              <span>{{ d.student.roll_no }} · {{ d.student.user.name }}</span>
+            </div>
+          </td>
+          <td>{{ d.fee_type }}</td>
+          <td>{{ d.title }}</td>
+          <td class="fw-semibold">₹{{ '{:,.2f}'.format(d.amount) }}</td>
+          <td><span class="badge {{ 'bg-success' if d.status == 'Paid' else 'bg-warning text-dark' }}">{{ d.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

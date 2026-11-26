@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard · CampusHub{% endblock %}
+{% block content %}
+<!-- Welcome Hero Banner -->
+<div class="hero-banner mb-4 anim-fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:2;">
+    <div class="d-flex align-items-center gap-3">
+      <img src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="avatar-md">
+      <div>
+        <div class="badge bg-white bg-opacity-25 text-white mb-1">Student Workspace · Semester {{ s.semester }}</div>
+        <h3 class="fw-bold mb-1">Welcome back, {{ current_user.name }}</h3>
+        <div class="small text-white-50">
+          <i class="bi bi-hash"></i> {{ s.roll_no }} &nbsp;·&nbsp; Reg: {{ s.reg_no }} &nbsp;·&nbsp; {{ s.department.name }} (Sec {{ s.section }})
+        </div>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('stud.registration_card') }}" class="btn btn-light btn-sm text-primary fw-semibold">
+        <i class="bi bi-person-vcard me-1"></i> Registration
+      </a>
+      <a href="{{ url_for('stud.admit_card') }}" class="btn btn-success btn-sm fw-semibold">
+        <i class="bi bi-card-checklist me-1"></i> Admit Card
+      </a>
+      <a href="{{ url_for('stud.marksheet') }}" class="btn btn-outline-light btn-sm fw-semibold">
+        <i class="bi bi-award me-1"></i> Marksheet
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3 anim-fade-up delay-1">
+    <a href="{{ url_for('stud.my_attendance') }}" class="text-decoration-none text-reset">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-muted small fw-semibold">Overall Attendance</span>
+          <span class="kpi-icon-box {{ 'bg-success-subtle text-success' if overall_att >= 75 else 'bg-danger-subtle text-danger' }}">
+            <i class="bi bi-check2-circle"></i>
+          </span>
+        </div>
+        <div class="fs-2 fw-bold count-up {{ 'text-success' if overall_att >= 75 else 'text-danger' }}">{{ overall_att }}%</div>
+        <small class="{{ 'text-success' if overall_att >= 75 else 'text-danger' }} fw-medium">
+          {{ 'Eligible (≥75%)' if overall_att >= 75 else 'Below 75% Warning' }}
+        </small>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-lg-3 anim-fade-up delay-2">
+    <a href="{{ url_for('stud.fees_portal') }}" class="text-decoration-none text-reset">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-muted small fw-semibold">Pending Fee Dues</span>
+          <span class="kpi-icon-box {{ 'bg-danger-subtle text-danger' if total_due > 0 else 'bg-success-subtle text-success' }}">
+            <i class="bi bi-wallet2"></i>
+          </span>
+        </div>
+        <div class="fs-2 fw-bold count-up {{ 'text-danger' if total_due > 0 else 'text-success' }}">₹{{ '{:,.0f}'.format(total_due) }}</div>
+        <small class="text-muted">{{ unpaid_count }} unpaid item(s)</small>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-lg-3 anim-fade-up delay-3">
+    <a href="{{ url_for('stud.exam_enrollment') }}" class="text-decoration-none text-reset">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-muted small fw-semibold">Exam Enrollment</span>
+          <span class="kpi-icon-box {{ 'bg-success-subtle text-success' if exam_enr and exam_enr.status == 'Enrolled' else 'bg-warning-subtle text-warning' }}">
+            <i class="bi bi-pencil-square"></i>
+          </span>
+        </div>
+        <div class="fs-3 fw-bold mt-1 {{ 'text-success' if exam_enr and exam_enr.status == 'Enrolled' else 'text-warning' }}">
+          {{ exam_enr.status if exam_enr else 'Pending' }}
+        </div>
+        <small class="text-muted text-truncate d-block">{{ exam_enr.admit_no if exam_enr and exam_enr.admit_no else 'Pay fee to unlock Admit Card' }}</small>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-lg-3 anim-fade-up delay-4">
+    <a href="{{ url_for('stud.library') }}" class="text-decoration-none text-reset">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-muted small fw-semibold">Library Books & Fine</span>
+          <span class="kpi-icon-box bg-primary-subtle text-primary">
+            <i class="bi bi-book-half"></i>
+          </span>
+        </div>
+        <div class="fs-2 fw-bold text-primary"><span class="count-up">{{ active_books|length }}</span> <span class="fs-6 fw-normal text-muted">issued</span></div>
+        <small class="{{ 'text-danger fw-semibold' if lib_fine > 0 else 'text-muted' }}">
+          {% if lib_fine > 0 %}Fine Due: ₹{{ lib_fine }}{% elif pending_book_reqs > 0 %}{{ pending_book_reqs }} awaiting approval{% else %}No overdue fines{% endif %}
+        </small>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7 anim-fade-up delay-3">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-bar-chart-line text-primary me-2"></i>Course-wise Attendance</h6>
+        <a href="{{ url_for('stud.my_attendance') }}" class="btn btn-sm btn-light text-primary">Detailed History →</a>
+      </div>
+      <div class="card-body">
+        {% for r in att_summary %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="fw-semibold">{{ r.course.code }} · {{ r.course.title }}</span>
+            <span>{{ r.attended }}/{{ r.total }} (<strong class="{{ 'text-success' if r.pct >= 75 else 'text-danger' }}">{{ r.pct }}%</strong>)</span>
+          </div>
+          <div class="progress" style="height: 9px;">
+            <div class="progress-bar {{ 'bg-success' if r.pct >= 75 else 'bg-danger' }}" style="width: {{ r.pct }}%"></div>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No courses enrolled.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h6 class="fw-bold mb-0"><i class="bi bi-grid text-primary me-2"></i>Student Self-Service Portal</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-sm-4"><a href="{{ url_for('stud.fees_portal') }}" class="quick-tile"><i class="bi bi-wallet2 text-primary"></i> Pay Fees</a></div>
+          <div class="col-sm-4"><a href="{{ url_for('stud.exam_enrollment') }}" class="quick-tile"><i class="bi bi-journal-check text-success"></i> Exam Form</a></div>
+          <div class="col-sm-4"><a href="{{ url_for('stud.library') }}" class="quick-tile"><i class="bi bi-book-half text-warning"></i> Library</a></div>
+          <div class="col-sm-4"><a href="{{ url_for('stud.marksheet') }}" class="quick-tile"><i class="bi bi-file-earmark-pdf text-danger"></i> Marksheet</a></div>
+          <div class="col-sm-4"><a href="{{ url_for('stud.registration_card') }}" class="quick-tile"><i class="bi bi-person-badge text-info"></i> Reg. Card</a></div>
+          <div class="col-sm-4"><a href="{{ url_for('stud.my_materials') }}" class="quick-tile"><i class="bi bi-folder2-open text-secondary"></i> Notes</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5 anim-fade-up delay-4">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-clock text-primary me-2"></i>Today's Classes ({{ today_name }})</h6>
+        <a href="{{ url_for('acad.timetable') }}" class="small text-decoration-none fw-semibold">Full Week</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for sl in today_slots %}
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <div>
+            <div class="fw-semibold">{{ sl.course.code }} · {{ sl.course.title }}</div>
+            <small class="text-muted"><i class="bi bi-alarm me-1"></i>{{ sl.start_time }} – {{ sl.end_time }}</small>
+          </div>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">{{ sl.room }}</span>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted small py-4 text-center">No scheduled classes today.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0"><i class="bi bi-megaphone text-primary me-2"></i>Latest Notices</h6>
+        <a href="{{ url_for('acad.notices') }}" class="small text-decoration-none fw-semibold">View All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for n in notices %}
+        <a href="{{ url_for('acad.view_notice', nid=n.id) }}" class="list-group-item list-group-item-action py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="badge bg-info-subtle text-info-emphasis">{{ n.category }}</span>
+            <small class="text-muted">{{ n.created_at.strftime('%d %b') }}</small>
+          </div>
+          <div class="fw-semibold mt-1 text-dark">{{ n.title }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

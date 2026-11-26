@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Course Materials · {{ c.code }}{% endblock %}
+{% block content %}
+<h4 class="fw-bold mb-3 anim-fade-up">{{ c.code }} · {{ c.title }} — Lecture Notes & Assignments</h4>
+<div class="row g-4">
+  <div class="col-lg-5 anim-fade-up delay-1">
+    <form method="post" class="card">
+      <div class="card-header fw-bold">Post New Resource / Assignment</div>
+      <div class="card-body">
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Title</label>
+          <input class="form-control" name="title" placeholder="e.g. Unit 3: Normalization & SQL Joins" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Type</label>
+          <select class="form-select" name="material_type">
+            <option>Lecture Notes</option>
+            <option>Assignment</option>
+            <option>Question Bank</option>
+            <option>Lab Manual</option>
+            <option>Reference Link</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Submission Due Date (optional)</label>
+          <input type="date" class="form-control" name="due_date">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Notes / Instructions / Resource URL</label>
+          <textarea class="form-control" name="content" rows="5" placeholder="Paste lecture summary, assignment questions, or resource links..." required></textarea>
+        </div>
+        <button class="btn btn-primary w-100">Publish to Course</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-7 anim-fade-up delay-2">
+    {% for m in materials %}
+    <div class="card card-hover mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <span class="badge bg-primary">{{ m.material_type }}</span>
+            {% if m.due_date %}<span class="badge bg-warning text-dark">Due: {{ m.due_date.strftime('%d %b %Y') }}</span>{% endif %}
+            <h6 class="fw-bold mt-2 mb-1">{{ m.title }}</h6>
+          </div>
+          <form method="post" action="{{ url_for('acad.delete_material', mid=m.id) }}">
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+          </form>
+        </div>
+        <p class="small text-muted mb-0" style="white-space: pre-line;">{{ m.content }}</p>
+      </div>
+    </div>
+    {% else %}
+    <div class="card p-4 text-center text-muted">No study materials or assignments uploaded for this course yet.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

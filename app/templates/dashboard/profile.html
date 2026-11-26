@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}My Profile · CampusHub{% endblock %}
+{% block content %}
+<div class="mb-3 anim-fade-up">
+  <h4 class="fw-bold mb-0">Profile & Security Settings</h4>
+  <small class="text-muted">Manage your display avatar, personal contact details, and account password</small>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4 anim-fade-up delay-1">
+    <div class="card text-center h-100">
+      <div class="card-body p-4">
+        <img src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="avatar-lg mb-3">
+        <h5 class="fw-bold mb-1">{{ current_user.name }}</h5>
+        <span class="badge bg-primary text-uppercase mb-3">{{ current_user.role }}</span>
+
+        <form method="post" enctype="multipart/form-data" class="text-start mt-2">
+          <input type="hidden" name="action" value="upload_photo">
+          <label class="form-label small fw-semibold">Upload New Profile Photo</label>
+          <input type="file" name="photo" accept="image/*" class="form-control form-control-sm mb-2">
+          <div class="text-center text-muted small my-1">— OR paste image URL —</div>
+          <input type="url" name="photo_url" placeholder="https://..." class="form-control form-control-sm mb-3">
+          <button class="btn btn-primary btn-sm w-100"><i class="bi bi-camera me-1"></i> Update Photo</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 anim-fade-up delay-2">
+    <form method="post" class="card h-100">
+      <input type="hidden" name="action" value="update_info">
+      <div class="card-header fw-bold">Personal & Institutional Details</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Full Name</label>
+          <input class="form-control" name="name" value="{{ current_user.name }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Email (Read-only)</label>
+          <input class="form-control bg-light" value="{{ current_user.email }}" disabled>
+        </div>
+        {% if current_user.role == 'student' and current_user.student %}
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Phone</label>
+          <input class="form-control" name="phone" value="{{ current_user.student.phone or '' }}">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Guardian Name</label>
+          <input class="form-control" name="guardian_name" value="{{ current_user.student.guardian_name or '' }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Address</label>
+          <input class="form-control" name="address" value="{{ current_user.student.address or '' }}">
+        </div>
+        {% elif current_user.role == 'faculty' and current_user.faculty %}
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Phone</label>
+          <input class="form-control" name="phone" value="{{ current_user.faculty.phone or '' }}">
+        </div>
+        {% elif current_user.role == 'librarian' and current_user.librarian %}
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Phone</label>
+          <input class="form-control" name="phone" value="{{ current_user.librarian.phone or '' }}">
+        </div>
+        {% endif %}
+        <button class="btn btn-primary w-100">Save Details</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4 anim-fade-up delay-3">
+    <form method="post" class="card h-100">
+      <input type="hidden" name="action" value="change_password">
+      <div class="card-header fw-bold">Security · Change Password</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Current Password</label>
+          <input type="password" class="form-control" name="old_password" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">New Password</label>
+          <input type="password" class="form-control" name="new_password" required>
+        </div>
+        <button class="btn btn-outline-dark w-100">Update Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

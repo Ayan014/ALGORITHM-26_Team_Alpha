@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Weekly Timetable · CampusHub{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 anim-fade-up">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-calendar3 text-primary me-2"></i>Weekly Class Schedule</h4>
+    <small class="text-muted">Academic lecture slots and room allocations</small>
+  </div>
+  <button class="btn btn-sm btn-outline-primary no-print" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print Timetable</button>
+</div>
+
+<div class="row g-3">
+  {% for d in days %}
+  <div class="col-md-6 col-lg-4 anim-fade-up delay-{{ loop.index if loop.index <= 5 else 5 }}">
+    <div class="card card-hover h-100">
+      <div class="card-header fw-bold text-primary d-flex justify-content-between align-items-center">
+        <span>{{ d }}</span>
+        <span class="badge bg-primary-subtle text-primary rounded-pill">{{ by_day[d]|length }} Slots</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for sl in by_day[d] %}
+        <li class="list-group-item py-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-bold text-dark">{{ sl.course.code }}</span>
+            <span class="badge bg-light text-dark border rounded-pill">{{ sl.room }}</span>
+          </div>
+          <div class="small fw-medium mb-1">{{ sl.course.title }}</div>
+          <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ sl.start_time }} – {{ sl.end_time }}</small>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted small py-4 text-center">No classes scheduled</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

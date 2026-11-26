@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Study Materials & Assignments · CampusHub{% endblock %}
+{% block content %}
+<div class="mb-4 anim-fade-up">
+  <h4 class="fw-bold mb-0">Course Lecture Notes & Assignments</h4>
+  <small class="text-muted">Download syllabus notes, assignments, and lab resources shared by faculty</small>
+</div>
+
+{% for m in materials %}
+<div class="card card-hover mb-3 anim-fade-up delay-{{ loop.index if loop.index <= 4 else 4 }}">
+  <div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+      <div class="d-flex flex-wrap gap-1">
+        <span class="badge bg-dark">{{ m.course.code }}</span>
+        <span class="badge bg-primary">{{ m.material_type }}</span>
+        {% if m.due_date %}<span class="badge bg-warning text-dark">Due: {{ m.due_date.strftime('%d %b %Y') }}</span>{% endif %}
+      </div>
+      <small class="text-muted">Posted {{ m.created_at.strftime('%d %b %Y') }}</small>
+    </div>
+    <h5 class="fw-bold mt-1">{{ m.title }}</h5>
+    <p class="mb-0 text-secondary" style="white-space: pre-line;">{{ m.content }}</p>
+  </div>
+</div>
+{% else %}
+<div class="card p-5 text-center text-muted">No study materials posted for your current semester yet.</div>
+{% endfor %}
+{% endblock %}

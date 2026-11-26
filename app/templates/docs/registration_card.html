@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Registration Certificate · {{ s.reg_no }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print anim-fade-up" style="max-width:850px;margin:0 auto;">
+  <a href="{{ url_for('dash.home') }}" class="btn btn-sm btn-outline-secondary">← Back</a>
+  <div class="d-flex gap-2">
+    <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="bi bi-download me-1"></i> Download / Print PDF</button>
+    <button class="btn btn-sm btn-outline-success" onclick="shareDocument('University Registration - {{ s.user.name }}', 'Reg No: {{ s.reg_no }} | Roll: {{ s.roll_no }}')"><i class="bi bi-share me-1"></i> Share</button>
+  </div>
+</div>
+
+<div class="doc-sheet shadow-sm anim-fade-up delay-1">
+  <div class="doc-header text-center">
+    <h4 class="fw-bold text-uppercase mb-1">CampusHub Institute of Technology</h4>
+    <div class="text-muted small">Office of the Registrar · Student Enrollment & Registration Certificate</div>
+    <span class="badge bg-primary mt-2">OFFICIAL REGISTRATION CARD</span>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-9">
+      <table class="table table-bordered mb-0">
+        <tbody>
+          <tr><th class="bg-light" style="width:36%">Registration Number</th><td class="fw-bold text-primary">{{ s.reg_no }}</td></tr>
+          <tr><th class="bg-light">University Roll Number</th><td class="fw-bold">{{ s.roll_no }}</td></tr>
+          <tr><th class="bg-light">Student Full Name</th><td>{{ s.user.name }}</td></tr>
+          <tr><th class="bg-light">Guardian's Name</th><td>{{ s.guardian_name }}</td></tr>
+          <tr><th class="bg-light">Date of Birth</th><td>{{ s.dob }}</td></tr>
+          <tr><th class="bg-light">Department & Programme</th><td>B.Tech in {{ s.department.name }}</td></tr>
+          <tr><th class="bg-light">Current Semester & Sec</th><td>Semester {{ s.semester }} · Section {{ s.section }}</td></tr>
+          <tr><th class="bg-light">Email & Phone</th><td>{{ s.user.email }} · {{ s.phone or 'N/A' }}</td></tr>
+          <tr><th class="bg-light">Residential Address</th><td>{{ s.address }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-3 text-center">
+      <img src="{{ s.user.avatar_url }}" alt="{{ s.user.name }}" class="doc-photo mb-2">
+      <div class="small text-muted fw-semibold">{{ s.roll_no }}</div>
+    </div>
+  </div>
+
+  <h6 class="fw-bold mb-2">Registered Academic Courses (Semester {{ s.semester }})</h6>
+  <table class="table table-sm table-bordered">
+    <thead class="table-light"><tr><th>Code</th><th>Subject Name</th><th>Credits</th></tr></thead>
+    <tbody>
+      {% for c in courses %}
+      <tr><td>{{ c.code }}</td><td>{{ c.title }}</td><td>{{ c.credits }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="d-flex justify-content-between mt-5 pt-4 small text-muted">
+    <div>Status: <strong class="text-success">ACTIVE & BONAFIDE</strong></div>
+    <div class="text-end"><strong>Registrar</strong><br>CampusHub University</div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{% if auto_print %}<script>window.onload=()=>window.print()</script>{% endif %}{% endblock %}

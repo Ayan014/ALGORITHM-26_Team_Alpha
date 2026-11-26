@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Student Directory · CampusHub{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 anim-fade-up">
+  <div>
+    <h4 class="fw-bold mb-0">Student Directory</h4>
+    <small class="text-muted">Browse enrolled student profiles, attendance, and academic records</small>
+  </div>
+</div>
+
+<form class="row g-2 mb-4 anim-fade-up delay-1">
+  <div class="col-md-8"><input class="form-control" name="q" value="{{ q }}" placeholder="Search by name, roll number, or registration number..."></div>
+  <div class="col-md-2">
+    <select name="sem" class="form-select" onchange="this.form.submit()">
+      <option value="">All Semesters</option>
+      {% for i in range(1, 9) %}<option value="{{ i }}" {{ 'selected' if sem == i|string }}>Sem {{ i }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-primary w-100"><i class="bi bi-search me-1"></i> Search</button></div>
+</form>
+
+<div class="card anim-fade-up delay-2">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Student</th><th>Roll No</th><th>Reg No</th><th>Department</th><th>Sem / Sec</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ s.user.avatar_url }}" alt="{{ s.user.name }}" class="avatar-sm">
+              <div>
+                <div class="fw-semibold">{{ s.user.name }}</div>
+                <small class="text-muted">{{ s.user.email }}</small>
+              </div>
+            </div>
+          </td>
+          <td class="fw-semibold">{{ s.roll_no }}</td>
+          <td><code>{{ s.reg_no }}</code></td>
+          <td>{{ s.department.name }}</td>
+          <td>Sem {{ s.semester }} ({{ s.section }})</td>
+          <td><a href="{{ url_for('dash.student_profile', sid=s.id) }}" class="btn btn-sm btn-outline-primary">View Profile</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No matching students found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

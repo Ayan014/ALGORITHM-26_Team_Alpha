@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Attendance Register · {{ c.code }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 anim-fade-up">
+  <div>
+    <h4 class="fw-bold mb-0">{{ c.code }} · Attendance Register & Shortage Report</h4>
+    <small class="text-muted">Total Classes Conducted: {{ total_classes }}</small>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('acad.take_attendance', cid=c.id) }}" class="btn btn-sm btn-primary">Take Attendance</a>
+    <a href="?export=csv" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export CSV</a>
+  </div>
+</div>
+
+<div class="card anim-fade-up delay-1">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Roll No</th><th>Student</th><th>Attended</th><th>Absent</th><th>Percentage</th><th>Eligibility (75%)</th></tr>
+      </thead>
+      <tbody>
+        {% for r in report %}
+        <tr>
+          <td class="fw-semibold">{{ r.student.roll_no }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ r.student.user.avatar_url }}" class="avatar-sm" alt="{{ r.student.user.name }}">
+              <a href="{{ url_for('dash.student_profile', sid=r.student.id) }}" class="text-decoration-none fw-semibold">{{ r.student.user.name }}</a>
+            </div>
+          </td>
+          <td>{{ r.attended }} / {{ r.total }}</td>
+          <td>{{ r.absent }}</td>
+          <td style="width: 220px;">
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress flex-grow-1" style="height: 8px;">
+                <div class="progress-bar {{ 'bg-success' if r.pct >= 75 else 'bg-danger' }}" style="width: {{ r.pct }}%"></div>
+              </div>
+              <span class="small fw-bold">{{ r.pct }}%</span>
+            </div>
+          </td>
+          <td>
+            {% if r.pct >= 75 %}
+              <span class="badge bg-success-subtle text-success">Eligible</span>
+            {% else %}
+              <span class="badge bg-danger">Shortage Warning</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

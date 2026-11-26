@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Quick Attendance · {{ c.code }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 anim-fade-up">
+  <div>
+    <h4 class="fw-bold mb-0">{{ c.code }} · {{ c.title }}</h4>
+    <small class="text-muted">Quick Daily Attendance Entry · Semester {{ c.semester }}</small>
+  </div>
+  <a href="{{ url_for('acad.attendance_report', cid=c.id) }}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-bar-chart me-1"></i> View Full Register & Defaulters
+  </a>
+</div>
+
+<div class="card mb-3 anim-fade-up delay-1">
+  <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <form method="get" class="d-flex align-items-center gap-2">
+      <label class="fw-semibold small">Session Date:</label>
+      <input type="date" name="date" value="{{ day }}" max="{{ today }}" class="form-control form-control-sm w-auto">
+      <button class="btn btn-sm btn-primary">Load Date</button>
+    </form>
+    <div class="d-flex flex-wrap align-items-center gap-1">
+      <span class="small text-muted me-1">Recent:</span>
+      {% for rd in recent_dates %}
+      <a href="?date={{ rd.isoformat() }}" class="badge text-decoration-none {{ 'bg-primary' if rd == day else 'bg-light text-dark border' }}">{{ rd.strftime('%d %b') }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<form method="post" class="card anim-fade-up delay-2">
+  <input type="hidden" name="date" value="{{ day }}">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-sm btn-success" onclick="markAll(true)"><i class="bi bi-check-all"></i> Mark All Present</button>
+      <button type="button" class="btn btn-sm btn-outline-danger" onclick="markAll(false)"><i class="bi bi-x-lg"></i> Mark All Absent</button>
+    </div>
+    <div class="fw-semibold">
+      Present: <span id="presentCount" class="text-success fs-5">0</span> / {{ studs|length }}
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Roll No</th><th>Student</th><th class="text-center">Status</th><th>Optional Remark</th></tr>
+      </thead>
+      <tbody>
+        {% for s in studs %}
+        {% set is_p = existing.get(s.id, true) %}
+        <tr>
+          <td class="fw-semibold">{{ s.roll_no }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ s.user.avatar_url }}" class="avatar-sm" alt="{{ s.user.name }}">
+              <span>{{ s.user.name }}</span>
+            </div>
+          </td>
+          <td class="text-center">
+            <div class="form-check form-switch d-inline-block">
+              <input class="form-check-input att-chk" type="checkbox" name="present" value="{{ s.id }}" {{ 'checked' if is_p }} onchange="updateCount()">
+            </div>
+          </td>
+          <td>
+            <input type="text" name="rem_{{ s.id }}" value="{{ remarks_map.get(s.id, '') }}" class="form-control form-control-sm" placeholder="Late / Medical / Leave...">
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white text-end py-3">
+    <button class="btn btn-primary px-4"><i class="bi bi-save me-1"></i> Save Attendance for {{ day.strftime('%d %b %Y') }}</button>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+function updateCount() {
+  const chks = document.querySelectorAll('.att-chk');
+  let cnt = 0;
+  chks.forEach(c => { if (c.checked) cnt++; });
+  document.getElementById('presentCount').innerText = cnt;
+}
+function markAll(val) {
+  document.querySelectorAll('.att-chk').forEach(c => c.checked = val);
+  updateCount();
+}
+updateCount();
+</script>
+{% endblock %}

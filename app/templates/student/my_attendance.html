@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}My Attendance · CampusHub{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 anim-fade-up">
+  <div class="d-flex align-items-center gap-3">
+    <img src="{{ s.user.avatar_url }}" class="avatar-md" alt="{{ s.user.name }}">
+    <div>
+      <h4 class="fw-bold mb-0">Course-wise Attendance Record</h4>
+      <small class="text-muted">{{ s.user.name }} · {{ s.roll_no }} · Semester {{ s.semester }}</small>
+    </div>
+  </div>
+  <div class="kpi-card py-2 px-3 d-inline-flex align-items-center gap-2">
+    <span class="small text-muted">Aggregate Attendance:</span>
+    <strong class="fs-5 count-up {{ 'text-success' if overall_pct >= 75 else 'text-danger' }}">{{ overall_pct }}%</strong>
+    <small class="text-muted">({{ overall_att }}/{{ overall_tot }} classes)</small>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for r in rows %}
+  <div class="col-md-6 anim-fade-up delay-{{ loop.index if loop.index <= 4 else 4 }}">
+    <div class="card card-hover h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ r.course.code }}</span>
+            <h6 class="fw-bold mt-2 mb-0">{{ r.course.title }}</h6>
+            <small class="text-muted">Faculty: {{ r.course.faculty.user.name if r.course.faculty else 'TBA' }}</small>
+          </div>
+          <span class="fs-4 fw-bold {{ 'text-success' if r.pct >= 75 else 'text-danger' }}">{{ r.pct }}%</span>
+        </div>
+
+        <div class="progress my-3" style="height: 10px;">
+          <div class="progress-bar {{ 'bg-success' if r.pct >= 75 else 'bg-danger' }}" style="width: {{ r.pct }}%"></div>
+        </div>
+
+        <div class="d-flex justify-content-between small text-muted mb-2">
+          <span>Present: <strong class="text-dark">{{ r.attended }}</strong></span>
+          <span>Absent: <strong class="text-dark">{{ r.absent }}</strong></span>
+          <span>Total Held: <strong class="text-dark">{{ r.total }}</strong></span>
+        </div>
+
+        {% if r.total > 0 and r.pct < 75 %}
+        <div class="alert alert-danger py-2 px-3 small mb-2">
+          <i class="bi bi-exclamation-triangle-fill me-1"></i> Shortage Alert: Attend next <strong>{{ r.needed }}</strong> consecutive classes to reach 75%.
+        </div>
+        {% elif r.total > 0 %}
+        <div class="text-success small mb-2 fw-medium"><i class="bi bi-check-circle-fill me-1"></i> Eligible for Semester Examination</div>
+        {% endif %}
+
+        {% if r.history %}
+        <div class="border-top pt-2 mt-2">
+          <div class="small fw-semibold text-muted mb-1">Recent Sessions:</div>
+          <div class="d-flex flex-wrap gap-1">
+            {% for h in r.history %}
+            <span class="badge {{ 'bg-success-subtle text-success border border-success' if h.present else 'bg-danger-subtle text-danger border border-danger' }}" title="{{ h.remarks }}">
+              {{ h.date.strftime('%d/%m') }}: {{ 'P' if h.present else 'A' }}
+            </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

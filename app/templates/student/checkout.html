@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Secure Fee Checkout · CampusHub{% endblock %}
+{% block content %}
+<div class="row justify-content-center anim-fade-up">
+  <div class="col-md-6 col-lg-5">
+    <div class="card overflow-hidden">
+      <div class="hero-banner rounded-0 py-3 px-4">
+        <h5 class="mb-0 fw-bold position-relative" style="z-index:2;"><i class="bi bi-shield-lock me-2"></i>CampusHub Payment Gateway</h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <img src="{{ s.user.avatar_url }}" class="avatar-sm" alt="{{ s.user.name }}">
+          <div>
+            <div class="small text-muted">Student</div>
+            <div class="fw-bold">{{ s.user.name }} ({{ s.roll_no }})</div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <div class="small text-muted">Fee Particular</div>
+          <div class="fw-semibold">{{ demand.title }} <span class="badge bg-secondary">{{ demand.fee_type }}</span></div>
+        </div>
+        <div class="p-3 bg-light rounded-3 border mb-4 d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Payable Amount</span>
+          <span class="fs-3 fw-bold text-primary">₹{{ '{:,.2f}'.format(demand.amount) }}</span>
+        </div>
+
+        {% if live_mode %}
+        <button id="rzp-button" class="btn btn-primary w-100 py-2 fw-bold">
+          Pay ₹{{ '{:,.2f}'.format(demand.amount) }} via Razorpay
+        </button>
+        <form id="rzp-form" method="post" action="{{ url_for('stud.fee_confirm', did=demand.id) }}">
+          <input type="hidden" name="razorpay_order_id" id="rzp_order_id">
+          <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
+          <input type="hidden" name="razorpay_signature" id="rzp_signature">
+          <input type="hidden" name="method_label" value="Razorpay Live">
+        </form>
+        {% else %}
+        <div class="alert alert-info small">
+          <strong>Razorpay Test/Demo Mode:</strong> Choose a simulated payment method below to complete payment & generate an official receipt immediately.
+        </div>
+        <form method="post" action="{{ url_for('stud.fee_confirm', did=demand.id) }}">
+          <input type="hidden" name="razorpay_order_id" value="{{ order_id }}">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Payment Method</label>
+            <select name="method_label" class="form-select">
+              <option value="Razorpay UPI (GPay / PhonePe)">UPI (Google Pay / PhonePe / Paytm)</option>
+              <option value="Razorpay Debit/Credit Card">Debit / Credit Card</option>
+              <option value="Razorpay NetBanking">NetBanking (SBI / HDFC / ICICI)</option>
+            </select>
+          </div>
+          <button class="btn btn-success w-100 py-2 fw-bold">
+            <i class="bi bi-check-circle me-1"></i> Authorize & Pay ₹{{ '{:,.2f}'.format(demand.amount) }}
+          </button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('stud.fees_portal') }}" class="btn btn-link w-100 mt-2 text-muted">Cancel & Go Back</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if live_mode %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+  "key": "{{ rzp_key }}",
+  "amount": "{{ (demand.amount * 100)|int }}",
+  "currency": "INR",
+  "name": "CampusHub College ERP",
+  "description": "{{ demand.title }}",
+  "order_id": "{{ order_id }}",
+  "handler": function (response) {
+    document.getElementById('rzp_order_id').value = response.razorpay_order_id;
+    document.getElementById('rzp_payment_id').value = response.razorpay_payment_id;
+    document.getElementById('rzp_signature').value = response.razorpay_signature;
+    document.getElementById('rzp-form').submit();
+  },
+  "prefill": {
+    "name": "{{ s.user.name }}",
+    "email": "{{ s.user.email }}",
+    "contact": "{{ s.phone or '' }}"
+  }
+};
+var rzp1 = new Razorpay(options);
+document.getElementById('rzp-button').onclick = function(e) {
+  rzp1.open();
+  e.preventDefault();
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Central Library · CampusHub{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 anim-fade-up">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-book-half text-primary me-2"></i>Central Library Portal</h4>
+    <small class="text-muted">Max 3 books · 14-day loan · ₹10/day overdue fine · All issues & returns require Librarian approval</small>
+  </div>
+  <div class="d-flex gap-2">
+    <span class="badge bg-primary fs-6 rounded-pill px-3">Active / Requested: {{ active_count }}/3</span>
+    {% if unpaid_fine_total > 0 %}
+    <span class="badge bg-danger fs-6 rounded-pill px-3">Pending Fines: ₹{{ '{:,.2f}'.format(unpaid_fine_total) }}</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- My Library Requests & Borrowed Books -->
+<div class="card mb-4 anim-fade-up delay-1">
+  <div class="card-header fw-bold">My Book Requests, Active Loans & Fines</div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Book Title</th><th>Status</th><th>Issued / Due Date</th><th>Fine</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for i in my_issues %}
+        <tr>
+          <td>
+            <div class="fw-semibold">{{ i.book.title }}</div>
+            <small class="text-muted">{{ i.book.author }} · ISBN: {{ i.book.isbn }}</small>
+          </td>
+          <td>
+            {% if i.status == 'Issue Requested' %}
+              <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Issue Requested</span>
+            {% elif i.status == 'Issued' %}
+              <span class="badge bg-primary">Issued</span>
+            {% elif i.status == 'Return Requested' %}
+              <span class="badge bg-info text-dark"><i class="bi bi-hourglass-split"></i> Return Requested</span>
+            {% elif i.status == 'Returned' %}
+              <span class="badge bg-success">Returned {{ i.returned_on.strftime('%d %b') if i.returned_on }}</span>
+            {% else %}
+              <span class="badge bg-danger">Rejected</span>
+            {% endif %}
+            {% if i.remarks %}<div class="small text-muted mt-1">{{ i.remarks }}</div>{% endif %}
+          </td>
+          <td>
+            {% if i.issued_on and i.due_date %}
+              <div class="small">Issued: {{ i.issued_on.strftime('%d %b %Y') }}</div>
+              <div class="small fw-semibold {{ 'text-danger' if i.overdue_days > 0 and i.status != 'Returned' else '' }}">
+                Due: {{ i.due_date.strftime('%d %b %Y') }}
+                {% if i.overdue_days > 0 and i.status != 'Returned' %}({{ i.overdue_days }}d late){% endif %}
+              </div>
+            {% else %}
+              <small class="text-muted">Requested {{ i.requested_on.strftime('%d %b %Y') }}</small>
+            {% endif %}
+          </td>
+          <td class="fw-bold {{ 'text-danger' if i.computed_fine > 0 and not i.fine_paid else 'text-muted' }}">
+            {% if i.computed_fine > 0 %}
+              ₹{{ '{:,.2f}'.format(i.computed_fine) }}
+              {% if i.fine_paid %}<span class="badge bg-success ms-1">Paid</span>{% endif %}
+            {% else %}
+              ₹0.00
+            {% endif %}
+          </td>
+          <td>
+            {% if i.status == 'Issued' %}
+              {% if i.computed_fine > 0 and not i.fine_paid %}
+                <a href="{{ url_for('stud.pay_library_fine', iid=i.id) }}" class="btn btn-sm btn-danger">Pay Fine</a>
+              {% else %}
+                <form method="post" action="{{ url_for('stud.request_return_book', iid=i.id) }}" class="d-inline">
+                  <button class="btn btn-sm btn-outline-primary">Request Return</button>
+                </form>
+              {% endif %}
+            {% elif i.status == 'Issue Requested' %}
+              <span class="text-muted small">Pending Librarian</span>
+            {% elif i.status == 'Return Requested' %}
+              <span class="text-muted small">Pending Verification</span>
+            {% else %}
+              <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">You have no library requests or issued books yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Search Catalog & Request Book Issue -->
+<div class="card anim-fade-up delay-2">
+  <div class="card-header">
+    <form class="row g-2">
+      <div class="col-md-7">
+        <input class="form-control" name="q" value="{{ q }}" placeholder="Search library catalog by title, author, or ISBN...">
+      </div>
+      <div class="col-md-3">
+        <select name="cat" class="form-select" onchange="this.form.submit()">
+          <option value="">All Subjects</option>
+          {% for c in categories %}
+          <option {{ 'selected' if c == cat }}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100">Search</button>
+      </div>
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>ISBN</th><th>Title & Author</th><th>Category</th><th>Shelf</th><th>Availability</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for b in books %}
+        <tr>
+          <td><code>{{ b.isbn }}</code></td>
+          <td>
+            <div class="fw-semibold">{{ b.title }}</div>
+            <small class="text-muted">{{ b.author }}</small>
+          </td>
+          <td><span class="badge bg-info-subtle text-info-emphasis">{{ b.category }}</span></td>
+          <td>{{ b.shelf_location }}</td>
+          <td>
+            <span class="fw-bold {{ 'text-success' if b.available_copies > 0 else 'text-danger' }}">
+              {{ b.available_copies }}
+            </span> / {{ b.total_copies }}
+          </td>
+          <td>
+            {% if b.available_copies > 0 %}
+            <form method="post" action="{{ url_for('stud.request_issue_book', bid=b.id) }}">
+              <button class="btn btn-sm btn-success">Request Issue</button>
+            </form>
+            {% else %}
+            <button class="btn btn-sm btn-secondary" disabled>Out of Stock</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Librarian Desk · CampusHub{% endblock %}
+{% block content %}
+<div class="hero-banner mb-4 anim-fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:2;">
+    <div class="d-flex align-items-center gap-3">
+      <img src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="avatar-md">
+      <div>
+        <div class="badge bg-white bg-opacity-25 text-white mb-1">{{ lib.designation if lib else 'Chief Librarian' }}</div>
+        <h3 class="fw-bold mb-1">Library Desk · {{ current_user.name }}</h3>
+        <div class="small text-white-50">{{ lib.staff_id if lib else 'LIB-01' }} · Central Library Circulation & Catalog</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('acad.new_notice') }}" class="btn btn-light btn-sm text-primary fw-semibold">
+        <i class="bi bi-megaphone me-1"></i> Post Library Notice
+      </a>
+      <a href="{{ url_for('dash.profile') }}" class="btn btn-outline-light btn-sm fw-semibold">
+        <i class="bi bi-person-circle me-1"></i> Edit Profile
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+  {% set lib_icons = ['bi-book', 'bi-stack', 'bi-hourglass-split', 'bi-journal-check'] %}
+  {% for k, v in stats.items() %}
+  <div class="col-6 col-md-3 anim-fade-up delay-{{ loop.index }}">
+    <div class="kpi-card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <span class="text-muted small fw-semibold">{{ k }}</span>
+        <span class="kpi-icon-box bg-primary-subtle text-primary">
+          <i class="bi {{ lib_icons[loop.index0 % 4] }}"></i>
+        </span>
+      </div>
+      <div class="fs-2 fw-bold text-dark count-up">{{ v }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pending Approvals -->
+<div class="row g-4 mb-4 anim-fade-up delay-2">
+  <div class="col-lg-6">
+    <div class="card h-100 border-top border-warning border-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-hourglass-split text-warning me-2"></i>Book Issue Requests</span>
+        <span class="badge bg-warning text-dark rounded-pill">{{ issue_requests|length }} Pending</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr><th>Student</th><th>Book Requested</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for req in issue_requests %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="{{ req.student.user.avatar_url }}" class="avatar-sm" alt="Student">
+                  <div>
+                    <a href="{{ url_for('dash.student_profile', sid=req.student.id) }}" class="fw-semibold text-decoration-none">
+                      {{ req.student.user.name }}
+                    </a>
+                    <div class="small text-muted">{{ req.student.roll_no }} · Sem {{ req.student.semester }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="fw-semibold">{{ req.book.title }}</div>
+                <small class="text-muted">Avail: {{ req.book.available_copies }}/{{ req.book.total_copies }} · {{ req.requested_on.strftime('%d %b') }}</small>
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <form method="post" action="{{ url_for('lib.approve_issue', iid=req.id) }}">
+                    <button class="btn btn-sm btn-success" title="Approve Issue"><i class="bi bi-check-lg"></i> Approve</button>
+                  </form>
+                  <form method="post" action="{{ url_for('lib.reject_issue', iid=req.id) }}">
+                    <button class="btn btn-sm btn-outline-danger" title="Reject"><i class="bi bi-x-lg"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted py-4">No pending book issue requests.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100 border-top border-info border-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-arrow-return-left text-info me-2"></i>Book Return Requests</span>
+        <span class="badge bg-info text-dark rounded-pill">{{ return_requests|length }} Pending</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr><th>Student</th><th>Book & Fine</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for req in return_requests %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <img src="{{ req.student.user.avatar_url }}" class="avatar-sm" alt="Student">
+                  <div>
+                    <a href="{{ url_for('dash.student_profile', sid=req.student.id) }}" class="fw-semibold text-decoration-none">
+                      {{ req.student.user.name }}
+                    </a>
+                    <div class="small text-muted">{{ req.student.roll_no }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="fw-semibold">{{ req.book.title }}</div>
+                <small class="text-muted">Due: {{ req.due_date.strftime('%d %b %Y') }}</small>
+                {% if req.computed_fine > 0 %}
+                  <div>
+                    <span class="badge {{ 'bg-success' if req.fine_paid else 'bg-danger' }}">
+                      Fine ₹{{ '{:,.0f}'.format(req.computed_fine) }} ({{ 'Paid' if req.fine_paid else 'Unpaid' }})
+                    </span>
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('lib.approve_return', iid=req.id) }}">
+                  <button class="btn btn-sm btn-primary"><i class="bi bi-check2-circle"></i> Approve Return</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted py-4">No pending book return requests.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Currently Issued Books Register -->
+<div class="card mb-4 anim-fade-up delay-3">
+  <div class="card-header fw-bold"><i class="bi bi-journal-bookmark text-primary me-2"></i>Currently Issued Books Register</div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Student</th><th>Book</th><th>Issued On</th><th>Due Date</th><th>Overdue / Fine</th><th>Direct Return</th></tr>
+      </thead>
+      <tbody>
+        {% for i in active_issues %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <img src="{{ i.student.user.avatar_url }}" class="avatar-sm" alt="Student">
+              <div>
+                <a href="{{ url_for('dash.student_profile', sid=i.student.id) }}" class="fw-semibold text-decoration-none">{{ i.student.user.name }}</a>
+                <div class="small text-muted">{{ i.student.roll_no }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ i.book.title }}</td>
+          <td>{{ i.issued_on.strftime('%d %b %Y') }}</td>
+          <td>{{ i.due_date.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if i.overdue_days > 0 %}
+              <span class="badge bg-danger">{{ i.overdue_days }}d late · ₹{{ '{:,.0f}'.format(i.computed_fine) }}</span>
+              {% if i.fine_paid %}<span class="badge bg-success">Paid</span>{% endif %}
+            {% else %}
+              <span class="badge bg-success-subtle text-success">On Time</span>
+            {% endif %}
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('lib.approve_return', iid=i.id) }}">
+              <button class="btn btn-sm btn-outline-primary">Mark Returned</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">No books currently issued.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add New Books & Manage Library Catalog -->
+<div class="card anim-fade-up delay-4">
+  <div class="card-header fw-bold"><i class="bi bi-plus-square text-success me-2"></i>Add New Book to Library Catalog</div>
+  <div class="card-body border-bottom bg-light">
+    <form method="post" action="{{ url_for('lib.add_book') }}" class="row g-2">
+      <div class="col-md-2"><input class="form-control form-control-sm" name="isbn" placeholder="ISBN (e.g. 978-013...)" required></div>
+      <div class="col-md-3"><input class="form-control form-control-sm" name="title" placeholder="Book Title" required></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" name="author" placeholder="Author Name" required></div>
+      <div class="col-md-2"><input class="form-control form-control-sm" name="category" placeholder="Subject Category" value="Computer Science" required></div>
+      <div class="col-md-1"><input class="form-control form-control-sm" name="shelf_location" placeholder="Shelf" value="Rack A-1"></div>
+      <div class="col-md-1"><input type="number" class="form-control form-control-sm" name="total_copies" value="5" min="1" title="Total Copies"></div>
+      <div class="col-md-1"><button class="btn btn-sm btn-success w-100 fw-semibold">Add</button></div>
+    </form>
+  </div>
+
+  <div class="card-body pb-2">
+    <form class="row g-2 mb-3">
+      <div class="col-md-7"><input class="form-control form-control-sm" name="q" value="{{ q }}" placeholder="Filter catalog by title, author, or ISBN..."></div>
+      <div class="col-md-3">
+        <select name="cat" class="form-select form-select-sm" onchange="this.form.submit()">
+          <option value="">All Categories</option>
+          {% for c in categories %}<option {{ 'selected' if c == cat }}>{{ c }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2"><button class="btn btn-sm btn-outline-primary w-100">Filter</button></div>
+    </form>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>ISBN</th><th>Title & Author</th><th>Category</th><th>Shelf</th><th>Available / Total</th><th>Adjust Stock</th></tr>
+      </thead>
+      <tbody>
+        {% for b in books %}
+        <tr>
+          <td><code>{{ b.isbn }}</code></td>
+          <td>
+            <div class="fw-semibold">{{ b.title }}</div>
+            <small class="text-muted">{{ b.author }}</small>
+          </td>
+          <td><span class="badge bg-info-subtle text-info-emphasis">{{ b.category }}</span></td>
+          <td>{{ b.shelf_location }}</td>
+          <td><strong class="{{ 'text-success' if b.available_copies > 0 else 'text-danger' }}">{{ b.available_copies }}</strong> / {{ b.total_copies }}</td>
+          <td>
+            <div class="d-flex gap-1">
+              <form method="post" action="{{ url_for('lib.update_stock', bid=b.id) }}">
+                <input type="hidden" name="delta" value="1">
+                <button class="btn btn-sm btn-outline-success">+1</button>
+              </form>
+              <form method="post" action="{{ url_for('lib.update_stock', bid=b.id) }}">
+                <input type="hidden" name="delta" value="-1">
+                <button class="btn btn-sm btn-outline-secondary">-1</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

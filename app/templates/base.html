@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CampusHub · College Management System{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<div class="app-wrapper">
+  <!-- Mobile Backdrop -->
+  <div class="ch-sidebar-backdrop no-print" id="chBackdrop"></div>
+
+  <!-- Left Navigation Sidebar -->
+  <aside class="ch-sidebar no-print" id="chSidebar">
+    <div class="ch-sidebar-header">
+      <a class="ch-brand" href="{{ url_for('dash.home') }}">
+        <span class="ch-brand-icon"><i class="bi bi-mortarboard-fill"></i></span>
+        <span>Campus<span style="color:#38bdf8;">Hub</span></span>
+      </a>
+      <button class="btn btn-sm text-white d-lg-none" id="sidebarClose" aria-label="Close menu">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="ch-sidebar-nav">
+      {% if current_user.role == 'librarian' %}
+        <div class="nav-section-label">Library Operations</div>
+        <a class="ch-nav-link" href="{{ url_for('lib.workspace') }}"><i class="bi bi-book-half"></i> Library Desk</a>
+        <a class="ch-nav-link" href="{{ url_for('dash.students') }}"><i class="bi bi-people"></i> Student Profiles</a>
+        <a class="ch-nav-link" href="{{ url_for('acad.notices') }}"><i class="bi bi-megaphone"></i> Notice Board</a>
+        <a class="ch-nav-link" href="{{ url_for('acad.new_notice') }}"><i class="bi bi-plus-circle"></i> Post Notice</a>
+      {% else %}
+        <div class="nav-section-label">Main Menu</div>
+        <a class="ch-nav-link" href="{{ url_for('dash.home') }}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        <a class="ch-nav-link" href="{{ url_for('acad.notices') }}"><i class="bi bi-megaphone"></i> Notices</a>
+        <a class="ch-nav-link" href="{{ url_for('acad.timetable') }}"><i class="bi bi-calendar3"></i> Timetable</a>
+
+        {% if current_user.role == 'student' %}
+          <div class="nav-section-label">Academics & Campus</div>
+          <a class="ch-nav-link" href="{{ url_for('stud.my_attendance') }}"><i class="bi bi-check2-square"></i> Attendance</a>
+          <a class="ch-nav-link" href="{{ url_for('stud.my_materials') }}"><i class="bi bi-journal-text"></i> Study Materials</a>
+          <a class="ch-nav-link" href="{{ url_for('stud.fees_portal') }}"><i class="bi bi-credit-card"></i> Fees & Receipts</a>
+          <a class="ch-nav-link" href="{{ url_for('stud.exam_enrollment') }}"><i class="bi bi-pencil-square"></i> Exam Enrollment</a>
+          <a class="ch-nav-link" href="{{ url_for('stud.library') }}"><i class="bi bi-book"></i> Central Library</a>
+
+          <div class="nav-section-label">Official Documents</div>
+          <a class="ch-nav-link" href="{{ url_for('stud.registration_card') }}"><i class="bi bi-person-vcard"></i> Registration Card</a>
+          <a class="ch-nav-link" href="{{ url_for('stud.admit_card') }}"><i class="bi bi-card-checklist"></i> Exam Admit Card</a>
+          <a class="ch-nav-link" href="{{ url_for('stud.marksheet') }}"><i class="bi bi-award"></i> Marksheet PDF</a>
+        {% elif current_user.role == 'faculty' %}
+          <div class="nav-section-label">Faculty Tools</div>
+          <a class="ch-nav-link" href="{{ url_for('dash.students') }}"><i class="bi bi-people"></i> Student Directory</a>
+          <a class="ch-nav-link" href="{{ url_for('acad.new_notice') }}"><i class="bi bi-plus-circle"></i> Publish Notice</a>
+        {% else %}
+          <div class="nav-section-label">Administration</div>
+          <a class="ch-nav-link" href="{{ url_for('dash.students') }}"><i class="bi bi-people"></i> Student Directory</a>
+          <a class="ch-nav-link" href="{{ url_for('admin_p.manage_fees') }}"><i class="bi bi-cash-coin"></i> Fee Demands</a>
+          <a class="ch-nav-link" href="{{ url_for('acad.new_notice') }}"><i class="bi bi-plus-circle"></i> Publish Notice</a>
+        {% endif %}
+      {% endif %}
+
+      <div class="nav-section-label">Account</div>
+      <a class="ch-nav-link" href="{{ url_for('dash.profile') }}"><i class="bi bi-person-gear"></i> Profile & Settings</a>
+    </div>
+
+    <div class="ch-sidebar-footer">
+      <div class="d-flex align-items-center justify-content-between gap-2">
+        <a href="{{ url_for('dash.profile') }}" class="d-flex align-items-center gap-2 text-decoration-none text-white overflow-hidden">
+          <img src="{{ current_user.avatar_url }}" alt="Avatar" class="avatar-xs flex-shrink-0">
+          <div class="text-truncate">
+            <div class="small fw-semibold text-truncate">{{ current_user.name }}</div>
+            <div class="text-uppercase" style="font-size:0.65rem;color:#38bdf8;letter-spacing:0.05em;">{{ current_user.role }}</div>
+          </div>
+        </a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light border-0" title="Sign Out">
+          <i class="bi bi-box-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Workspace -->
+  <div class="ch-main">
+    <header class="ch-topbar no-print">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-light border d-lg-none" id="sidebarToggle" aria-label="Open menu">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <div>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold">
+            <i class="bi bi-stars me-1"></i> CampusHub ERP · 2026
+          </span>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <span class="d-none d-md-inline-flex align-items-center gap-1 small text-muted bg-light px-3 py-1 rounded-pill border">
+          <i class="bi bi-calendar-event text-primary"></i>
+          <span id="liveClock"></span>
+        </span>
+        <a href="{{ url_for('dash.profile') }}" class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+          <img src="{{ current_user.avatar_url }}" alt="Avatar" class="avatar-xs">
+          <span class="small fw-semibold d-none d-sm-inline">{{ current_user.name }}</span>
+        </a>
+        <a class="btn btn-sm btn-outline-danger" href="{{ url_for('auth.logout') }}">
+          <i class="bi bi-box-arrow-right"></i> <span class="d-none d-md-inline">Logout</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="ch-content-area">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, text in msgs %}
+          <div class="alert alert-{{ cat }} alert-dismissible fade show ch-alert shadow-sm no-print" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>{{ text }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+    <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080; max-width: 480px; width: 100%;">
+      {% for cat, text in msgs %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show ch-alert shadow" role="alert">
+          {{ text }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

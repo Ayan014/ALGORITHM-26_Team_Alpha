@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Publish Notice · CampusHub{% endblock %}
+{% block content %}
+<div class="row justify-content-center anim-fade-up">
+  <div class="col-lg-7">
+    <h4 class="fw-bold mb-3">Publish New Circular / Notice</h4>
+    <form method="post" class="card card-body p-4">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Notice Title</label>
+        <input class="form-control" name="title" placeholder="Enter headline..." required>
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-8">
+          <label class="form-label fw-semibold">Category</label>
+          <select class="form-select" name="category">
+            {% for c in ['General', 'Exam', 'Fees', 'Event', 'Holiday', 'Library'] %}
+            <option {{ 'selected' if current_user.role == 'librarian' and c == 'Library' }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="pinned" value="1" id="pinChk">
+            <label class="form-check-label fw-semibold" for="pinChk">Pin to Top</label>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Notice Content</label>
+        <textarea class="form-control" name="body" rows="6" placeholder="Write complete circular details..." required></textarea>
+      </div>
+      <button class="btn btn-primary py-2"><i class="bi bi-send me-1"></i> Publish Notice</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

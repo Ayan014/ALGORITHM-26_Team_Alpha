@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Faculty Workspace · CampusHub{% endblock %}
+{% block content %}
+<div class="hero-banner mb-4 anim-fade-up">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 position-relative" style="z-index:2;">
+    <div class="d-flex align-items-center gap-3">
+      <img src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="avatar-md">
+      <div>
+        <div class="badge bg-white bg-opacity-25 text-white mb-1">{{ fac.designation }}</div>
+        <h3 class="fw-bold mb-1">Faculty Workspace · {{ current_user.name }}</h3>
+        <div class="small text-white-50">{{ fac.employee_id }} &nbsp;·&nbsp; {{ fac.department.name }}</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('acad.new_notice') }}" class="btn btn-light btn-sm text-primary fw-semibold">
+        <i class="bi bi-megaphone me-1"></i> Publish Notice
+      </a>
+      <a href="{{ url_for('dash.students') }}" class="btn btn-outline-light btn-sm fw-semibold">
+        <i class="bi bi-search me-1"></i> Student Directory
+      </a>
+    </div>
+  </div>
+</div>
+
+<h5 class="fw-bold mb-3 anim-fade-up delay-1">Assigned Courses & Quick Actions</h5>
+<div class="row g-3 mb-4">
+  {% for item in course_stats %}
+  {% set c = item.course %}
+  <div class="col-md-6 anim-fade-up delay-{{ loop.index if loop.index <= 4 else 4 }}">
+    <div class="card card-hover h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-1">{{ c.code }}</span>
+            <span class="badge bg-light text-dark border mb-1">Sem {{ c.semester }} · {{ c.credits }} Credits</span>
+            <h5 class="fw-bold mb-1 mt-1">{{ c.title }}</h5>
+          </div>
+          <div class="text-end small">
+            <div class="fw-bold fs-6">{{ item.total_students }} <span class="text-muted fw-normal small">Students</span></div>
+            <div class="text-muted">{{ item.classes_taken }} Classes Held</div>
+            {% if item.low_att > 0 %}
+            <span class="badge bg-danger-subtle text-danger mt-1">{{ item.low_att }} Short Attendance</span>
+            {% endif %}
+          </div>
+        </div>
+        <hr class="my-3">
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-sm btn-primary" href="{{ url_for('acad.take_attendance', cid=c.id) }}">
+            <i class="bi bi-check2-square me-1"></i> Quick Attendance
+          </a>
+          <a class="btn btn-sm btn-success" href="{{ url_for('acad.enter_marks', cid=c.id) }}">
+            <i class="bi bi-123 me-1"></i> Marks Entry
+          </a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('acad.attendance_report', cid=c.id) }}">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Report
+          </a>
+          <a class="btn btn-sm btn-outline-dark" href="{{ url_for('acad.manage_materials', cid=c.id) }}">
+            <i class="bi bi-journal-arrow-up me-1"></i> Materials
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12"><div class="alert alert-info">No courses assigned yet.</div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-4 anim-fade-up delay-3">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header fw-bold"><i class="bi bi-calendar-day text-primary me-2"></i>Today's Lectures ({{ today_name }})</div>
+      <ul class="list-group list-group-flush">
+        {% for sl in my_slots %}
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <div>
+            <strong>{{ sl.course.code }}</strong> – {{ sl.course.title }}
+            <div class="small text-muted">{{ sl.start_time }} – {{ sl.end_time }}</div>
+          </div>
+          <span class="badge bg-dark rounded-pill px-3">{{ sl.room }}</span>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted small py-4 text-center">No lectures scheduled for today.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between fw-bold">
+        <span><i class="bi bi-megaphone text-primary me-2"></i>Recent Notices</span>
+        <a href="{{ url_for('acad.notices') }}" class="small text-decoration-none">All Notices</a>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for n in notices %}
+        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <a href="{{ url_for('acad.view_notice', nid=n.id) }}" class="text-decoration-none text-dark fw-semibold">{{ n.title }}</a>
+          <span class="badge bg-info-subtle text-info-emphasis">{{ n.category }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

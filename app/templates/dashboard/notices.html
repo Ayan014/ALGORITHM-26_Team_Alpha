@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Notices · CampusHub{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 anim-fade-up">
+  <div>
+    <h4 class="fw-bold mb-0">Official Notice Board</h4>
+    <small class="text-muted">Institutional circulars, exam schedules, fee deadlines, and announcements</small>
+  </div>
+  {% if current_user.role != 'student' %}
+  <a class="btn btn-primary" href="{{ url_for('acad.new_notice') }}"><i class="bi bi-plus-lg me-1"></i> Publish Notice</a>
+  {% endif %}
+</div>
+
+<form class="row g-2 mb-4 anim-fade-up delay-1">
+  <div class="col-md-7"><input class="form-control" name="q" value="{{ q }}" placeholder="Search notices by keyword..."></div>
+  <div class="col-md-3">
+    <select name="cat" class="form-select" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for c in ['General', 'Exam', 'Fees', 'Event', 'Holiday', 'Library'] %}
+      <option {{ 'selected' if c == cat }}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filter</button></div>
+</form>
+
+{% for n in items %}
+<div class="card card-hover mb-3 anim-fade-up delay-{{ loop.index if loop.index <= 4 else 4 }} {{ 'border-start border-primary border-4' if n.pinned }}">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        {% if n.author %}<img src="{{ n.author.avatar_url }}" class="avatar-xs" alt="{{ n.author.name }}">{% endif %}
+        {% if n.pinned %}<span class="badge bg-primary"><i class="bi bi-pin-angle-fill"></i> Pinned</span>{% endif %}
+        <span class="badge bg-info-subtle text-info-emphasis">{{ n.category }}</span>
+        <small class="text-muted">{{ n.created_at.strftime('%d %b %Y') }} · By {{ n.author.name if n.author else 'Admin' }}</small>
+      </div>
+    </div>
+    <h5 class="fw-bold mt-1">{{ n.title }}</h5>
+    <p class="mb-3 text-secondary" style="white-space: pre-line;">{{ n.body }}</p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('acad.view_notice', nid=n.id) }}"><i class="bi bi-eye me-1"></i> View / Print PDF</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('acad.download_notice', nid=n.id) }}"><i class="bi bi-download me-1"></i> Download TXT</a>
+      <a class="btn btn-sm btn-outline-success" target="_blank" href="https://wa.me/?text={{ (n.title ~ ' - ' ~ n.body)|urlencode }}"><i class="bi bi-whatsapp me-1"></i> Share</a>
+      <button class="btn btn-sm btn-outline-dark" onclick="navigator.clipboard.writeText({{ (n.title ~ '
+' ~ n.body)|tojson }}); alert('Notice copied!')"><i class="bi bi-clipboard me-1"></i> Copy</button>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card p-5 text-center text-muted">No notices found matching your filter.</div>
+{% endfor %}
+{% endblock %}
